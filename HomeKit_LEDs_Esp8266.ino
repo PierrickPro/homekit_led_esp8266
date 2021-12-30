@@ -12,7 +12,7 @@
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 CRGB leds[NUM_LEDS];
-bool is_on = false;
+bool plain_strip_is_on = false;
 float current_brightness =  100.0;
 float current_sat = 0.0;
 float current_hue = 0.0;
@@ -26,7 +26,6 @@ extern "C" homekit_characteristic_t cha_sat;
 extern "C" homekit_characteristic_t cha_hue;
 extern "C" homekit_characteristic_t target_temperature;
 
-
 void setup() {
   Serial.begin(115200);
 
@@ -35,7 +34,8 @@ void setup() {
   FastLED.setBrightness(BRIGHTNESS);
 
   WiFi.mode(WIFI_STA);
-  WiFi.disconnect(true);
+  //WiFi.disconnect(true);
+  //homekit_storage_reset();
 
   //Use WiFiManager library to setup WiFi
   WiFiManager wm;
@@ -50,8 +50,6 @@ void setup() {
       //if you get here you have connected to the WiFi    
       Serial.println("connected to \'" + WiFi.SSID() + "\'");
   }
-
-  homekit_storage_reset(); // to remove the previous HomeKit pairing storage when you first run this new HomeKit example
 
   delay(1000);
   rgb_colors[0] = 255;
@@ -76,7 +74,7 @@ void loop() {
     next_heap_millis = t + 5 * 1000;
   }
 
-  if (!is_on)
+  if (!plain_strip_is_on)
   {
     demoReel100Loop();
   }
@@ -86,22 +84,21 @@ void loop() {
 
 void setOn(const homekit_value_t v) {
   bool on = v.bool_value;
+  Serial.println("setOn " + on);
   cha_on.value.bool_value = on; //sync the value
 
   if (on) {
-    is_on = true;
-    Serial.println("On");
+    plain_strip_is_on = true;
   } else  {
-    is_on = false;
-    Serial.println("Off");
+    plain_strip_is_on = false;
   }
 
   updatePlainLedStrip();
 }
 
 void setHue(const homekit_value_t v) {
-  Serial.println("setHue");
   float hue = v.float_value;
+  Serial.println("setHue");
   cha_hue.value.float_value = hue; //sync the value
 
   current_hue = hue;
@@ -109,8 +106,8 @@ void setHue(const homekit_value_t v) {
 }
 
 void setSat(const homekit_value_t v) {
-  Serial.println("setSat");
   float sat = v.float_value;
+  Serial.println("setSat");
   cha_sat.value.float_value = sat; //sync the value
 
   current_sat = sat;
@@ -118,8 +115,8 @@ void setSat(const homekit_value_t v) {
 }
 
 void setBright(const homekit_value_t v) {
-  Serial.println("setBright");
   int bright = v.int_value;
+  Serial.println("setBright " + bright);
   cha_bright.value.int_value = bright; //sync the value
 
   current_brightness = bright;
@@ -128,22 +125,19 @@ void setBright(const homekit_value_t v) {
 
 void updatePlainLedStrip()
 {
-  if (is_on) {
-    Serial.println("is_on = true");
+  Serial.println("PlainStrip " + plain_strip_is_on);
 
+  if (plain_strip_is_on) {
     HSV2RGB(current_hue, current_sat, current_brightness);
 
-    int a = 0;
-    while (a != NUM_LEDS)
+    for (int i = 0; i < NUM_LEDS; ++i)
     {
-      leds[a] = CRGB(rgb_colors[0], rgb_colors[1], rgb_colors[2]);
-      a++;
+      leds[i] = CRGB(rgb_colors[0], rgb_colors[1], rgb_colors[2]);
     }
   }
 
-  else if (!is_on) //lamp - switch to off
+  else if (!plain_strip_is_on) //lamp - switch to off
   {
-    Serial.println("is_on = false");
     FastLED.clear();
   }
   FastLED.show();
@@ -214,8 +208,6 @@ void HSV2RGB(float h, float s, float v) {
 }
 
 
-//The code below is a modified version of the example DemoReel100 from the FastLed library
-// List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])(); 
 SimplePatternList gPatterns = { clearStrip, rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
 
@@ -233,26 +225,19 @@ void demoReel100Loop()
   EVERY_N_MILLISECONDS( 20 ) {
     gHue++;  // slowly cycle the "base color" through the rainbow
   }
-
-  //EVERY_N_SECONDS( 10 ) { nextPattern(); } // change patterns periodically
 }
 
 void setPattern(const homekit_value_t v)
 {
-  Serial.println("setPattern");
   float temp = v.float_value;
   target_temperature.value.float_value = temp; //sync the value
 
   int pattern_index = (int) (temp / 0.5) - 20;
+  Serial.println("setPattern " + pattern_index);
+
   gCurrentPatternNumber = pattern_index % ARRAY_SIZE( gPatterns);
 }
 
-
-void nextPattern()
-{
-  // add one to the current pattern number, and wrap around at the end
-  gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
-}
 
 void clearStrip()
 {
