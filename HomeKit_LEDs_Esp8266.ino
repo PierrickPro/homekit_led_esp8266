@@ -42,13 +42,12 @@ void setup() {
   bool res;
   res = wm.autoConnect("ESP8266 Setup"); // anonymous ap
   //res = wm.autoConnect("AutoConnectAP","password"); // password protected ap
-    if(!res) {
-      Serial.println("Failed to connect");
-      // ESP.restart();
+  if(!res) {
+    Serial.println("Failed to connect");
+    errorAnimationLoop();
   } 
   else {
-      //if you get here you have connected to the WiFi    
-      Serial.println("connected to \'" + WiFi.SSID() + "\'");
+    Serial.println("connected to \'" + WiFi.SSID() + "\'");
   }
 
   delay(1000);
@@ -74,9 +73,8 @@ void loop() {
     next_heap_millis = t + 5 * 1000;
   }
 
-  if (!plain_strip_is_on)
-  {
-    demoReel100Loop();
+  if(!plain_strip_is_on ){
+    demoReel100();
   }
 
   delay(10);
@@ -116,7 +114,7 @@ void setSat(const homekit_value_t v) {
 
 void setBright(const homekit_value_t v) {
   int bright = v.int_value;
-  Serial.println("setBright " + bright);
+  Serial.println("setBright");
   cha_bright.value.int_value = bright; //sync the value
 
   current_brightness = bright;
@@ -125,8 +123,7 @@ void setBright(const homekit_value_t v) {
 
 void updatePlainLedStrip()
 {
-  Serial.println("PlainStrip " + plain_strip_is_on);
-
+  Serial.println("updatePlainLedStrip");
   if (plain_strip_is_on) {
     HSV2RGB(current_hue, current_sat, current_brightness);
 
@@ -214,12 +211,11 @@ SimplePatternList gPatterns = { clearStrip, rainbow, rainbowWithGlitter, confett
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
-void demoReel100Loop()
+void demoReel100()
 {
   gPatterns[gCurrentPatternNumber]();
 
-  
-  FastLED.show(); // send the 'leds' array out to the actual LED strip
+  FastLED.show();
   FastLED.delay(1000 / FRAMES_PER_SECOND); // insert a delay to keep the framerate modest
 
   EVERY_N_MILLISECONDS( 20 ) {
@@ -238,11 +234,29 @@ void setPattern(const homekit_value_t v)
   gCurrentPatternNumber = pattern_index % ARRAY_SIZE( gPatterns);
 }
 
-
 void clearStrip()
 {
   // FastLED's built-in rainbow generator
   FastLED.clear();
+}
+
+void errorAnimationLoop(){
+  while(true){
+      fadeToBlackBy( leds, NUM_LEDS, 20);
+      int midpoint = (NUM_LEDS - 1)/2;
+      int speed = 50;
+
+      //tail half
+      int pos = beatsin16(speed, midpoint + 1, NUM_LEDS - 1);
+      leds[pos] += CHSV( 0, 255, 192);
+
+      //head half
+      pos = beatsin16(speed, 0, midpoint);
+      leds[abs(pos - midpoint)] += CRGB::Red;
+
+      FastLED.show();
+      delay(5);
+    }
 }
 
 void rainbow()
