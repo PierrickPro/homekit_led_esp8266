@@ -3,10 +3,11 @@
 #include <FastLED.h>
 #include <WiFiManager.h> 
 
-#define DATA_PIN    D4
+#define DATA_PIN_BOT    5
+#define DATA_PIN_TOP    0
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define NUM_LEDS    64
+#define NUM_LEDS    180
 #define BRIGHTNESS          96
 #define FRAMES_PER_SECOND  120
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -16,7 +17,6 @@ bool plain_strip_is_on = false;
 float current_brightness =  100.0;
 float current_sat = 0.0;
 float current_hue = 0.0;
-int rgb_colors[3];
 static uint32_t next_heap_millis = 0;
 
 extern "C" homekit_server_config_t accessory_config;
@@ -28,9 +28,10 @@ extern "C" homekit_characteristic_t target_temperature;
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("setup");
 
-  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  //FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<LED_TYPE, DATA_PIN_BOT, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<LED_TYPE, DATA_PIN_TOP, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(BRIGHTNESS);
 
   WiFi.mode(WIFI_STA);
@@ -49,11 +50,6 @@ void setup() {
   else {
     Serial.println("connected to \'" + WiFi.SSID() + "\'");
   }
-
-  delay(1000);
-  rgb_colors[0] = 255;
-  rgb_colors[1] = 255;
-  rgb_colors[2] = 255;
 
   cha_on.setter = setOn;
   cha_bright.setter = setBright;
@@ -124,12 +120,11 @@ void setBright(const homekit_value_t v) {
 void updatePlainLedStrip()
 {
   Serial.println("updatePlainLedStrip");
-  if (plain_strip_is_on) {
-    HSV2RGB(current_hue, current_sat, current_brightness);
 
+  if (plain_strip_is_on) {
     for (int i = 0; i < NUM_LEDS; ++i)
     {
-      leds[i] = CRGB(rgb_colors[0], rgb_colors[1], rgb_colors[2]);
+      leds[i] = CHSV(current_hue, current_sat, current_brightness);
     }
   }
 
@@ -137,71 +132,8 @@ void updatePlainLedStrip()
   {
     FastLED.clear();
   }
+
   FastLED.show();
-}
-
-void HSV2RGB(float h, float s, float v) {
-
-  int i;
-  float m, n, f;
-
-  s /= 100;
-  v /= 100;
-
-  if (s == 0) {
-    rgb_colors[0] = rgb_colors[1] = rgb_colors[2] = round(v * 255);
-    return;
-  }
-
-  h /= 60;
-  i = floor(h);
-  f = h - i;
-
-  if (!(i & 1)) {
-    f = 1 - f;
-  }
-
-  m = v * (1 - s);
-  n = v * (1 - s * f);
-
-  switch (i) {
-
-    case 0: case 6:
-      rgb_colors[0] = round(v * 255);
-      rgb_colors[1] = round(n * 255);
-      rgb_colors[2] = round(m * 255);
-      break;
-
-    case 1:
-      rgb_colors[0] = round(n * 255);
-      rgb_colors[1] = round(v * 255);
-      rgb_colors[2] = round(m * 255);
-      break;
-
-    case 2:
-      rgb_colors[0] = round(m * 255);
-      rgb_colors[1] = round(v * 255);
-      rgb_colors[2] = round(n * 255);
-      break;
-
-    case 3:
-      rgb_colors[0] = round(m * 255);
-      rgb_colors[1] = round(n * 255);
-      rgb_colors[2] = round(v * 255);
-      break;
-
-    case 4:
-      rgb_colors[0] = round(n * 255);
-      rgb_colors[1] = round(m * 255);
-      rgb_colors[2] = round(v * 255);
-      break;
-
-    case 5:
-      rgb_colors[0] = round(v * 255);
-      rgb_colors[1] = round(m * 255);
-      rgb_colors[2] = round(n * 255);
-      break;
-  }
 }
 
 
@@ -225,18 +157,17 @@ void demoReel100()
 
 void setPattern(const homekit_value_t v)
 {
+  Serial.println("setPattern");
   float temp = v.float_value;
   target_temperature.value.float_value = temp; //sync the value
 
   int pattern_index = (int) (temp / 0.5) - 20;
-  Serial.println("setPattern " + pattern_index);
 
   gCurrentPatternNumber = pattern_index % ARRAY_SIZE( gPatterns);
 }
 
 void clearStrip()
 {
-  // FastLED's built-in rainbow generator
   FastLED.clear();
 }
 
