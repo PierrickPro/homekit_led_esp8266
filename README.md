@@ -13,7 +13,7 @@ Every time the temperature is increased by 0.5, the next mode is set.
 
 The LED animations used were taken from the DemoReel100.ino example from the FastLED library.
 
-[WiFiManager Library](https://github.com/tzapu/WiFiManager) to setup the WiFi connection easily</br>
+[WiFiManager Library](https://github.com/tzapu/WiFiManager) to setup the WiFi connection easily using a configuration portal</br>
 [HomeKit Library](https://github.com/Mixiaoxiao/Arduino-HomeKit-ESP8266) to comunicate with HomeKit</br>
 [FastLED](https://fastled.io) to control the LED strip</br>
 
