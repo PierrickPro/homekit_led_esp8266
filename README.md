@@ -2,7 +2,7 @@
 
 [Project Video Demo](https://youtu.be/LauEOlCBuvg)
 
-My goal was to control individually addressable LED strips remotely in a convenient way.
+My goal was to control individually addressable LED strips remotely.
 I decided to use HomeKit, to leverage the Apple ecosystem and the Shortcut app.
 
 HomeKit doesn't support individually addressable LED strips.
