@@ -1,3 +1,5 @@
+# HomeKit LED Strips using ESP8266
+
 [Project Video Demo](https://youtu.be/LauEOlCBuvg)
 
 My goal was to control individually addressable LED strips from my phone.
