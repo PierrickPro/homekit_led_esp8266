@@ -21,7 +21,7 @@ I used this [HomeKit Library](https://github.com/Mixiaoxiao/Arduino-HomeKit-ESP8
 Once everything was up and running, I created Shorcuts to easily switch between each mode by
 turning off the lamp, and setting the temperature corresponding to the mode.
 
-I can now control the light from the Shortcut widget and with Siri.
+I can now control the light from the Home app, Shortcut, and with Siri.
 
 Note: I had an issue where the first LED of the strip was randomly blinking. 
 I downgraded to esp8266 2.7.4 (from Board Manager) to fix the issue.
