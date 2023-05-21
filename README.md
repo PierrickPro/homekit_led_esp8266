@@ -27,6 +27,8 @@ I can now control the light from the Home app, Shortcut, and with Siri.
 - [FastLED Library](https://fastled.io) to control the LED Strip</br>
 
 ## Note 
-I had an issue where the first LED of the strip was randomly blinking. 
+- I had an issue where the first LED of the strip was randomly blinking. 
 I downgraded to esp8266 2.7.4 (from Board Manager) to fix the issue.
 (More info: https://github.com/FastLED/FastLED/issues/1260)
+
+- Looking bad at this code.. I should take the time to refactor the different libraries to only follow one naming convention... 
